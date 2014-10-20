@@ -166,7 +166,7 @@ class ProcNode(object):
         self.filters = getattr(value, '_ev_filters', [])
 
         # Resolve requirements
-        for req_name in getattr(value, '_ev_requires', []):
+        for req_name in getattr(value, '_ev_requires', set()):
             # Get the requirement
             req = self.proc._get(req_name)
 
@@ -174,7 +174,7 @@ class ProcNode(object):
             self.reqs.add(req)
 
         # Resolve any required_by values
-        for req_name in getattr(value, '_ev_required_by', []):
+        for req_name in getattr(value, '_ev_required_by', set()):
             # Get the requirement
             req = self.proc._get(req_name)
 
