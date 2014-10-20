@@ -12,3 +12,19 @@
 #    IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 #    express or implied. See the License for the specific language
 #    governing permissions and limitations under the License.
+
+from evproc.decorator import want, requires, required_by
+from evproc.event import Event
+from evproc.exc import EventException
+from evproc.exc import ProcessorReregisterException
+from evproc.exc import IncompatibleRequirementsException
+from evproc.processor import Processor
+
+
+__all__ = [
+    'want', 'requires', 'required_by',
+    'Event',
+    'EventException', 'ProcessorReregisterException',
+    'IncompatibleRequirementsException',
+    'Processor',
+]
