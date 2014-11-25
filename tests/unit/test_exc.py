@@ -13,19 +13,18 @@
 #    express or implied. See the License for the specific language
 #    governing permissions and limitations under the License.
 
-from evproc.decorator import want, requires, required_by
-from evproc.event import Event
-from evproc.exc import EventException
-from evproc.exc import ProcessorReregisterException
-from evproc.exc import IncompatibleRequirementsException
-from evproc.exc import StopProcessing
-from evproc.processor import Processor
+import unittest
+
+from evproc import exc
 
 
-__all__ = [
-    'want', 'requires', 'required_by',
-    'Event',
-    'EventException', 'ProcessorReregisterException',
-    'IncompatibleRequirementsException', 'StopProcessing',
-    'Processor',
-]
+class StopProcessingTest(unittest.TestCase):
+    def test_init_no_args(self):
+        ex = exc.StopProcessing()
+
+        self.assertEqual(ex.retval, None)
+
+    def test_init_with_args(self):
+        ex = exc.StopProcessing('retval')
+
+        self.assertEqual(ex.retval, 'retval')

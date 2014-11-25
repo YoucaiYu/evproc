@@ -347,13 +347,38 @@ class ProcessorTest(unittest.TestCase):
         self.assertEqual(mock_register.call_count, 5)
 
     @mock.patch.object(processor.Processor, '_get_procs')
-    def test_process(self, mock_get_procs):
-        nodes = [mock.Mock(), mock.Mock(), mock.Mock(), mock.Mock()]
+    def test_process_base(self, mock_get_procs):
+        nodes = [
+            mock.Mock(),
+            mock.Mock(),
+            mock.Mock(),
+            mock.Mock(),
+        ]
         mock_get_procs.return_value = nodes
         proc = processor.Processor()
 
-        proc.process('ev')
+        result = proc.process('ev')
 
+        self.assertEqual(result, None)
         mock_get_procs.assert_called_once_with('ev')
         for node in nodes:
             node.assert_called_once_with('ev')
+
+    @mock.patch.object(processor.Processor, '_get_procs')
+    def test_process_stop(self, mock_get_procs):
+        nodes = [
+            mock.Mock(),
+            mock.Mock(),
+            mock.Mock(side_effect=exc.StopProcessing('stop')),
+            mock.Mock(),
+        ]
+        mock_get_procs.return_value = nodes
+        proc = processor.Processor()
+
+        result = proc.process('ev')
+
+        self.assertEqual(result, 'stop')
+        mock_get_procs.assert_called_once_with('ev')
+        for node in nodes[:-1]:
+            node.assert_called_once_with('ev')
+        self.assertFalse(nodes[-1].called)

@@ -303,8 +303,16 @@ class Processor(object):
         those processors.
 
         :param ev: The event to process.
+
+        :returns: Returns ``None``, or a value passed to a
+                  ``StopProcessing`` exception raised by a processor.
         """
 
         # Walk through all the processors and process the event
         for proc in self._get_procs(ev):
-            proc(ev)
+            try:
+                proc(ev)
+            except exc.StopProcessing as ex:
+                return ex.retval
+
+        return None

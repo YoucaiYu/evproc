@@ -176,6 +176,17 @@ something like the following::
             # Process the event
             proc.process(ev)
 
+Stop Processing
+---------------
+
+It may be necessary for one event processor to stop all event
+processing.  This could, for instance, be used by a processor that
+performs an authorization check if the event fails that check.  To
+allow this, an event processor may raise the ``evproc.StopProcessing``
+exception.  The ``StopProcessing`` exception may be initialized with a
+``retval`` parameter that will become the return value of
+``Processor.process()`` (which normally returns ``None``).
+
 Conclusion
 ==========
 

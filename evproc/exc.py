@@ -39,3 +39,22 @@ class IncompatibleRequirementsException(EventException):
     """
 
     pass
+
+
+class StopProcessing(Exception):
+    """
+    An exception that may be raised by an event processor to stop
+    event processing.
+    """
+
+    def __init__(self, retval=None):
+        """
+        Initialize a ``StopProcessing`` exception.
+
+        :param retval: The return value for ``Processor.process()``.
+                       Defaults to ``None``.
+        """
+
+        super(StopProcessing, self).__init__('Stop processing')
+
+        self.retval = retval
