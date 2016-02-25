@@ -22,7 +22,7 @@ class StopProcessingTest(unittest.TestCase):
     def test_init_no_args(self):
         ex = exc.StopProcessing()
 
-        self.assertEqual(ex.retval, None)
+        self.assertEqual(ex.retval, exc._unset)
 
     def test_init_with_args(self):
         ex = exc.StopProcessing('retval')

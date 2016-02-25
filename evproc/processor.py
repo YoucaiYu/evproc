@@ -13,6 +13,8 @@
 #    express or implied. See the License for the specific language
 #    governing permissions and limitations under the License.
 
+import collections
+
 import stevedore
 
 from evproc import exc
@@ -298,7 +300,8 @@ class Processor(object):
 
     def process(self, ev):
         """
-        Process an event.  All defined and interested processors will be
+        Process an event, and any events returned by the processors
+        of the event.  All defined and interested processors will be
         called in an order consistent with the requirements defined on
         those processors.
 
@@ -308,11 +311,18 @@ class Processor(object):
                   ``StopProcessing`` exception raised by a processor.
         """
 
-        # Walk through all the processors and process the event
-        for proc in self._get_procs(ev):
-            try:
-                proc(ev)
-            except exc.StopProcessing as ex:
-                return ex.retval
+        event_deque = collections.deque([ev])
+        while event_deque:
+            ev = event_deque.popleft()
+            # Walk through all the processors and process the event
+            for proc in self._get_procs(ev):
+                try:
+                    additional_events = proc(ev)
+                except exc.StopProcessing as ex:
+                    if ex.retval is not exc._unset:
+                        return ex.retval
+                    break
+                if additional_events:
+                    event_deque.extend(additional_events)
 
         return None

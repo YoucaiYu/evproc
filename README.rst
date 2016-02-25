@@ -117,6 +117,9 @@ In this example, the ``test_prepare()`` handler function would be
 called first, followed by the ``test_auxiliary()`` handler function,
 and finally the ``test_run()`` handler function would be called.
 
+An event handler may optionally return a list of events, which will
+be processed in order.
+
 The Event Processor
 ===================
 
@@ -176,6 +179,10 @@ something like the following::
             # Process the event
             proc.process(ev)
 
+``Processor.process()`` returns ``None`` unless an event processor
+raises a ``evproc.StopProcessing`` exception initialized with a
+``retval``, in which case it returns the exception's ``retval``.
+
 Stop Processing
 ---------------
 
@@ -183,9 +190,14 @@ It may be necessary for one event processor to stop all event
 processing.  This could, for instance, be used by a processor that
 performs an authorization check if the event fails that check.  To
 allow this, an event processor may raise the ``evproc.StopProcessing``
-exception.  The ``StopProcessing`` exception may be initialized with a
-``retval`` parameter that will become the return value of
-``Processor.process()`` (which normally returns ``None``).
+exception.  When an event processor raises a ``StopProcessing``
+exception, no additional event processors will be called for that
+event.  If the ``StopProcessing`` exception is raised without a
+``retval``, yet-unprocessed events returned by prior event processors
+will still be processed.  If the ``StopProcessing`` exception is
+raised with a ``retval`` (even if ``None``), ``Processor.process()``
+will immediately return the exception's ``retval``, and yet-unprocessed
+events returned by prior event processors will not be processed.
 
 Conclusion
 ==========
