@@ -349,10 +349,10 @@ class ProcessorTest(unittest.TestCase):
     @mock.patch.object(processor.Processor, '_get_procs')
     def test_process_base(self, mock_get_procs):
         nodes = [
-            mock.Mock(),
-            mock.Mock(),
-            mock.Mock(),
-            mock.Mock(),
+            mock.Mock(return_value=None),
+            mock.Mock(return_value=None),
+            mock.Mock(return_value=None),
+            mock.Mock(return_value=None),
         ]
         mock_get_procs.return_value = nodes
         proc = processor.Processor()
@@ -367,10 +367,10 @@ class ProcessorTest(unittest.TestCase):
     @mock.patch.object(processor.Processor, '_get_procs')
     def test_process_stop(self, mock_get_procs):
         nodes = [
-            mock.Mock(),
-            mock.Mock(),
+            mock.Mock(return_value=None),
+            mock.Mock(return_value=None),
             mock.Mock(side_effect=exc.StopProcessing('stop')),
-            mock.Mock(),
+            mock.Mock(return_value=None),
         ]
         mock_get_procs.return_value = nodes
         proc = processor.Processor()
@@ -382,3 +382,108 @@ class ProcessorTest(unittest.TestCase):
         for node in nodes[:-1]:
             node.assert_called_once_with('ev')
         self.assertFalse(nodes[-1].called)
+
+    def _test_process_additional_events(self, mock_get_procs,
+                                        nodes,
+                                        expected_get_proc_call_args_list,
+                                        expected_node_call_counts,
+                                        expected_result):
+        mock_get_procs.side_effect = lambda ev: nodes[ev]
+        proc = processor.Processor()
+
+        result = proc.process(0)
+
+        self.assertEqual(result, expected_result)
+        self.assertEqual(mock_get_procs.call_args_list,
+                         expected_get_proc_call_args_list)
+        for ev, ev_nodes in enumerate(nodes):
+            for i, node in enumerate(ev_nodes):
+                self.assertEqual(node.call_count,
+                                 expected_node_call_counts[ev][i])
+
+    @mock.patch.object(processor.Processor, '_get_procs')
+    def test_process_additional_events(self, mock_get_procs):
+        self._test_process_additional_events(
+            mock_get_procs,
+            [
+                [  # 0
+                    mock.Mock(return_value=None),
+                    mock.Mock(return_value=[1, 3]),
+                ],
+                [  # 1
+                    mock.Mock(return_value=[]),
+                    mock.Mock(return_value=[2, 3]),
+                ],
+                [  # 2
+                    mock.Mock(return_value=[4]),
+                    mock.Mock(return_value=None),
+                ],
+                [  # 3
+                    mock.Mock(return_value=None),
+                ],
+                [  # 4
+                    mock.Mock(return_value=None),
+                ],
+            ],
+            [mock.call(0), mock.call(1), mock.call(3),
+             mock.call(2), mock.call(3), mock.call(4)],
+            [[1, 1], [1, 1], [1, 1], [2], [1]],
+            None
+        )
+
+    @mock.patch.object(processor.Processor, '_get_procs')
+    def test_process_additional_events_stop_no_return(self, mock_get_procs):
+        self._test_process_additional_events(
+            mock_get_procs,
+            [
+                [  # 0
+                    mock.Mock(return_value=[1]),
+                    mock.Mock(side_effect=exc.StopProcessing()),
+                    mock.Mock(return_value=None),
+                ],
+                [  # 1
+                    mock.Mock(return_value=[]),
+                ],
+            ],
+            [mock.call(0), mock.call(1)],
+            [[1, 1, 0], [1]],
+            None
+        )
+
+    @mock.patch.object(processor.Processor, '_get_procs')
+    def test_process_additional_events_stop_return_none(self, mock_get_procs):
+            self._test_process_additional_events(
+                mock_get_procs,
+                [
+                    [  # 0
+                        mock.Mock(return_value=[1]),
+                        mock.Mock(side_effect=exc.StopProcessing(None)),
+                        mock.Mock(return_value=None),
+                    ],
+                    [  # 1
+                        mock.Mock(return_value=[]),
+                    ],
+                ],
+                [mock.call(0)],
+                [[1, 1, 0], [0]],
+                None
+            )
+
+    @mock.patch.object(processor.Processor, '_get_procs')
+    def test_process_additional_events_stop_return_stop(self, mock_get_procs):
+            self._test_process_additional_events(
+                mock_get_procs,
+                [
+                    [  # 0
+                        mock.Mock(return_value=[1]),
+                        mock.Mock(side_effect=exc.StopProcessing('stop')),
+                        mock.Mock(return_value=None),
+                    ],
+                    [  # 1
+                        mock.Mock(return_value=[]),
+                    ],
+                ],
+                [mock.call(0)],
+                [[1, 1, 0], [0]],
+                'stop'
+            )

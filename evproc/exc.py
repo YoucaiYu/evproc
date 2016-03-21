@@ -14,6 +14,9 @@
 #    governing permissions and limitations under the License.
 
 
+_unset = object()
+
+
 class EventException(Exception):
     """
     Base class for all ``evproc`` exceptions.
@@ -47,7 +50,7 @@ class StopProcessing(Exception):
     event processing.
     """
 
-    def __init__(self, retval=None):
+    def __init__(self, retval=_unset):
         """
         Initialize a ``StopProcessing`` exception.
 
